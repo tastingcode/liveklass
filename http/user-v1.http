@@ -1,0 +1,22 @@
+
+### 강사 회원 가입
+POST {{liveklass-api}}/api/v1/users
+Content-Type: application/json
+
+{
+  "loginId": "creator1",
+  "userRole": "CREATOR"
+}
+
+### 수강생 회원 가입
+POST {{liveklass-api}}/api/v1/users
+Content-Type: application/json
+
+{
+  "loginId": "student{{$random.integer}}",
+  "userRole": "STUDENT"
+}
+
+### 내 정보 조회
+GET {{liveklass-api}}/api/v1/users/me
+X-USER-ID: 1

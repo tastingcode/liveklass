@@ -1,9 +1,12 @@
 package com.liveklass.domain.user;
 
 public class UserCommand {
-	public record Create(String loginId, String role){
+	public record Create(String loginId, String userRole){
 		public UserRole toUserRole(){
-			return UserRole.from(role);
+			return UserRole.from(userRole);
 		}
+	}
+
+	public record Find(Long userId) {
 	}
 }
