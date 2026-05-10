@@ -43,7 +43,7 @@ public class CourseEntity extends BaseEntity {
 
 	public static CourseEntity from(CourseCommand.Create command){
 		CourseEntity course = new CourseEntity();
-		course.creatorId = command.creatorId();
+		course.creatorId = command.userId();
 		course.title = command.title();
 		course.description = command.description();
 		course.status = CourseStatus.DRAFT;
