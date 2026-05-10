@@ -26,7 +26,7 @@ class EnrollmentEntityTest {
 			//given
 			Long courseId = 1L;
 			Long userId = 2L;
-			EnrollmentCommand.Create command = new EnrollmentCommand.Create(courseId, userId);
+			EnrollmentCommand.Create command = new EnrollmentCommand.Create(courseId, userId, 30);
 
 			//when
 			EnrollmentEntity enrollment = EnrollmentEntity.from(command);
@@ -41,7 +41,7 @@ class EnrollmentEntityTest {
 		@Test
 		public void 수강_신청_생성_시_강의_ID가_양수가_아니면_실패한다() {
 			//given
-			EnrollmentCommand.Create command = new EnrollmentCommand.Create(0L, 2L);
+			EnrollmentCommand.Create command = new EnrollmentCommand.Create(0L, 2L, 30);
 
 			//then
 			CoreException coreException = assertThrows(CoreException.class, () -> {
@@ -64,7 +64,7 @@ class EnrollmentEntityTest {
 		@Test
 		public void PENDING_상태의_수강_신청은_CONFIRMED로_변경된다() {
 			//given
-			EnrollmentEntity enrollment = EnrollmentEntity.from(new EnrollmentCommand.Create(1L, 2L));
+			EnrollmentEntity enrollment = EnrollmentEntity.from(new EnrollmentCommand.Create(1L, 2L, 30));
 
 			//when
 			enrollment.confirm();
@@ -77,7 +77,7 @@ class EnrollmentEntityTest {
 		@Test
 		public void 수강_신청_확정_시_확정일이_저장된다() {
 			//given
-			EnrollmentEntity enrollment = EnrollmentEntity.from(new EnrollmentCommand.Create(1L, 2L));
+			EnrollmentEntity enrollment = EnrollmentEntity.from(new EnrollmentCommand.Create(1L, 2L, 30));
 
 			//when
 			enrollment.confirm();
@@ -90,7 +90,7 @@ class EnrollmentEntityTest {
 		@Test
 		public void PENDING_상태가_아닌_수강_신청은_확정할_수_없다() {
 			//given
-			EnrollmentEntity enrollment = EnrollmentEntity.from(new EnrollmentCommand.Create(1L, 2L));
+			EnrollmentEntity enrollment = EnrollmentEntity.from(new EnrollmentCommand.Create(1L, 2L, 30));
 			enrollment.confirm();
 
 			//then
@@ -115,7 +115,7 @@ class EnrollmentEntityTest {
 		@Test
 		public void PENDING_상태의_수강_신청_취소시_CANCELLED로_변경된다() {
 			//given
-			EnrollmentEntity enrollment = EnrollmentEntity.from(new EnrollmentCommand.Create(1L, 2L));
+			EnrollmentEntity enrollment = EnrollmentEntity.from(new EnrollmentCommand.Create(1L, 2L, 30));
 			LocalDate cancelDate = LocalDate.now();
 			//when
 			enrollment.cancel(cancelDate, 7);
@@ -128,7 +128,7 @@ class EnrollmentEntityTest {
 		@Test
 		public void 이미_취소된_수강_신청은_다시_취소할_수_없다() {
 			//given
-			EnrollmentEntity enrollment = EnrollmentEntity.from(new EnrollmentCommand.Create(1L, 2L));
+			EnrollmentEntity enrollment = EnrollmentEntity.from(new EnrollmentCommand.Create(1L, 2L, 30));
 			LocalDate cancelDate = LocalDate.now();
 			enrollment.cancel(cancelDate, 7);
 
@@ -144,7 +144,7 @@ class EnrollmentEntityTest {
 		@Test
 		public void CONFIRMED_상태의_수강_신청은_취소_가능_기간_내에_CANCELLED로_변경된다() {
 			//given
-			EnrollmentEntity enrollment = EnrollmentEntity.from(new EnrollmentCommand.Create(1L, 2L));
+			EnrollmentEntity enrollment = EnrollmentEntity.from(new EnrollmentCommand.Create(1L, 2L, 30));
 			enrollment.confirm();
 			LocalDate confirmedDate = enrollment.getConfirmedDate();
 
@@ -159,7 +159,7 @@ class EnrollmentEntityTest {
 		@Test
 		public void CONFIRMED_상태의_수강_신청은_취소_가능_기간이_지나면_취소할_수_없다() {
 			//given
-			EnrollmentEntity enrollment = EnrollmentEntity.from(new EnrollmentCommand.Create(1L, 2L));
+			EnrollmentEntity enrollment = EnrollmentEntity.from(new EnrollmentCommand.Create(1L, 2L, 30));
 			enrollment.confirm();
 			LocalDate confirmedDate = enrollment.getConfirmedDate();
 
