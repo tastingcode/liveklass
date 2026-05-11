@@ -17,13 +17,10 @@ public class CourseCommand {
 	public record Find(Long courseId) {
 	}
 
-	public record Search(String status) {
-		public CourseStatus toCourseStatus() {
-			if (status == null || status.isBlank()) {
-				return null;
-			}
-
-			return CourseStatus.from(status);
-		}
+	public record Open(Long courseId, Long creatorId) {
 	}
+
+	public record Search(String status, int page, int size) {
+	}
+
 }

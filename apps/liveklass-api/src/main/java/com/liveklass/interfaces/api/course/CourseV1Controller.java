@@ -3,12 +3,13 @@ package com.liveklass.interfaces.api.course;
 import com.liveklass.application.course.CourseCriteria;
 import com.liveklass.application.course.CourseFacade;
 import com.liveklass.application.course.CourseResult;
+import com.liveklass.domain.common.PageResponse;
 import com.liveklass.interfaces.api.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -27,14 +28,15 @@ public class CourseV1Controller implements CourseV1ApiSpec {
 		return ApiResponse.success(response);
 	}
 
-	@GetMapping("")
 	@Override
-	public ApiResponse<List<CourseV1Dto.CourseResponse>> getCourses(
-			@RequestParam(required = false) String status
+	@GetMapping
+	public ApiResponse<PageResponse<CourseV1Dto.CourseResponse>> getCourses(
+			@RequestParam(required = false, defaultValue = "OPEN") String status,
+			@PageableDefault(page = 0, size = 10) Pageable pageable
 	) {
-		List<CourseV1Dto.CourseResponse> response = courseFacade.getCourses(new CourseCriteria.Search(status)).stream()
-				.map(CourseV1Dto.CourseResponse::from)
-				.toList();
+		PageResponse<CourseResult> results = courseFacade.getCourses(new CourseCriteria.Search(status, pageable));
+		PageResponse<CourseV1Dto.CourseResponse> response = results.map(CourseV1Dto.CourseResponse::from);
+
 		return ApiResponse.success(response);
 	}
 
@@ -43,8 +45,20 @@ public class CourseV1Controller implements CourseV1ApiSpec {
 	public ApiResponse<CourseV1Dto.CourseResponse> getCourse(
 			@PathVariable Long courseId
 	) {
-		CourseResult courseResult = courseFacade.getCourse(new CourseCriteria.Get(courseId));
+		CourseResult.Detail result = courseFacade.getCourse(new CourseCriteria.Get(courseId));
+		CourseV1Dto.CourseResponse response = CourseV1Dto.CourseResponse.from(result);
+		return ApiResponse.success(response);
+	}
+
+	@PatchMapping("/{courseId}/open")
+	@Override
+	public ApiResponse<CourseV1Dto.CourseResponse> openCourse(
+			@RequestHeader("X-USER-ID") Long userId,
+			@PathVariable Long courseId
+	) {
+		CourseResult courseResult = courseFacade.open(new CourseCriteria.Open(courseId, userId));
 		CourseV1Dto.CourseResponse response = CourseV1Dto.CourseResponse.from(courseResult);
 		return ApiResponse.success(response);
 	}
+
 }

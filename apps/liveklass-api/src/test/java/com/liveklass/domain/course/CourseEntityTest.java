@@ -78,6 +78,7 @@ class CourseEntityTest {
 
 			//when
 			CourseEntity course = CourseEntity.from(createCommand);
+			course.open();
 			course.close();
 
 			//then

@@ -1,11 +1,14 @@
 package com.liveklass.interfaces.api.course;
 
+import com.liveklass.domain.common.PageResponse;
 import com.liveklass.interfaces.api.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
-import java.util.List;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "Course V1 API", description = "Course API 입니다.")
 public interface CourseV1ApiSpec {
@@ -22,11 +25,21 @@ public interface CourseV1ApiSpec {
 
 	@Operation(
 			summary = "강의 목록 조회",
-			description = "강의 목록을 조회합니다. status 값으로 DRAFT, OPEN, CLOSED 필터를 사용할 수 있습니다."
+			description = "강의 목록 정보를 조회합니다."
 	)
-	ApiResponse<List<CourseV1Dto.CourseResponse>> getCourses(
-			@Schema(name = "강의 상태", description = "DRAFT, OPEN, CLOSED 중 하나")
-			String status
+	ApiResponse<PageResponse<CourseV1Dto.CourseResponse>> getCourses(
+			@Parameter(
+					name = "status",
+					description = "강의 상태",
+					required = false
+			)
+			@RequestParam(required = false) String status,
+			@Parameter(
+					name = "pageable",
+					description = "페이징 정보 (쿼리 파라미터)",
+					required = false
+			)
+			@PageableDefault(page = 0, size = 10) Pageable pageable
 	);
 
 	@Operation(
@@ -35,6 +48,17 @@ public interface CourseV1ApiSpec {
 	)
 	ApiResponse<CourseV1Dto.CourseResponse> getCourse(
 			@Schema(name = "강의 ID", description = "조회할 강의 ID")
+			Long courseId
+	);
+
+	@Operation(
+			summary = "강의 오픈",
+			description = "강사가 본인의 초안 강의를 모집 중 상태로 변경합니다."
+	)
+	ApiResponse<CourseV1Dto.CourseResponse> openCourse(
+			@Schema(name = "사용자 ID", description = "강의를 오픈하는 사용자 ID")
+			Long userId,
+			@Schema(name = "강의 ID", description = "오픈할 강의 ID")
 			Long courseId
 	);
 }

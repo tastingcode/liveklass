@@ -4,6 +4,8 @@ import com.liveklass.domain.course.CourseEntity;
 import com.liveklass.domain.course.CourseRepository;
 import com.liveklass.domain.course.CourseStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -26,12 +28,13 @@ public class CourseRepositoryImpl implements CourseRepository {
 	}
 
 	@Override
-	public List<CourseEntity> findAll() {
-		return courseJpaRepository.findAll();
+	public List<CourseEntity> findAllByStatus(CourseStatus status, int page, int size) {
+		return courseJpaRepository.findAllByStatus(status, PageRequest.of(page, size));
 	}
 
 	@Override
-	public List<CourseEntity> findAllByStatus(CourseStatus status) {
-		return courseJpaRepository.findAllByStatus(status);
+	public long countByStatus(CourseStatus status, int page, int size) {
+		return courseJpaRepository.findByStatus(status, PageRequest.of(page, size)).getTotalElements();
 	}
+
 }

@@ -51,7 +51,8 @@ public class CourseV1Dto {
 			int price,
 			int capacity,
 			LocalDate startDate,
-			LocalDate endDate
+			LocalDate endDate,
+			Integer applicants
 	) {
 		public static CourseResponse from(CourseResult courseResult) {
 			return new CourseResponse(
@@ -63,7 +64,23 @@ public class CourseV1Dto {
 					courseResult.price(),
 					courseResult.capacity(),
 					courseResult.startDate(),
-					courseResult.endDate()
+					courseResult.endDate(),
+					null
+			);
+		}
+
+		public static CourseResponse from(CourseResult.Detail result) {
+			return new CourseResponse(
+					result.id(),
+					result.creatorId(),
+					result.title(),
+					result.description(),
+					result.status(),
+					result.price(),
+					result.capacity(),
+					result.startDate(),
+					result.endDate(),
+					result.applicants()
 			);
 		}
 	}

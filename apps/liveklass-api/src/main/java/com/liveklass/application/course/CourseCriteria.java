@@ -1,6 +1,7 @@
 package com.liveklass.application.course;
 
 import com.liveklass.domain.course.CourseCommand;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 
@@ -27,15 +28,22 @@ public class CourseCriteria {
 		}
 	}
 
+	public record Search(String status, Pageable pageable){
+		public CourseCommand.Search toSearch(){
+			return new CourseCommand.Search(status, pageable.getPageNumber(), pageable.getPageSize());
+		}
+	}
+
 	public record Get(Long courseId) {
 		public CourseCommand.Find toCourseFind() {
 			return new CourseCommand.Find(courseId);
 		}
 	}
 
-	public record Search(String status) {
-		public CourseCommand.Search toCourseSearch() {
-			return new CourseCommand.Search(status);
+	public record Open(Long courseId, Long creatorId){
+		public CourseCommand.Open toOpen(){
+			return new CourseCommand.Open(courseId, creatorId);
 		}
+
 	}
 }

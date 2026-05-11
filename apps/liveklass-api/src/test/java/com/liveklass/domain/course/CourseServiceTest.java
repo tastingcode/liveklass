@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
@@ -45,8 +46,6 @@ class CourseServiceTest {
 
 	/**
 	 * - 해당 ID의 강의가 존재할 경우 강의 정보가 반환된다.
-	 * - 상태 필터가 주어지면 해당 상태의 강의 목록이 반환된다.
-	 * - 상태 필터가 없으면 전체 강의 목록이 반환된다.
 	 */
 	@Nested
 	@DisplayName("강의 조회")
@@ -59,43 +58,104 @@ class CourseServiceTest {
 			given(courseRepository.findById(1L)).willReturn(Optional.of(course));
 
 			//when
-			Optional<CourseInfo> courseInfo = courseService.findCourse(new CourseCommand.Find(1L));
+			Optional<CourseInfo> courseInfo = courseService.findCourseInfo(new CourseCommand.Find(1L));
 
 			//then
 			assertThat(courseInfo).isPresent();
 			assertThat(courseInfo.get().title()).isEqualTo(course.getTitle());
 		}
+	}
 
-		@DisplayName("상태 필터가 주어지면 해당 상태의 강의 목록이 반환된다.")
+	/**
+	 * - 상태값이 없으면 OPEN 상태의 강의 목록이 반환된다.
+	 * - 상태값이 주어지면 해당 상태의 강의 목록이 반환된다.
+	 */
+	@Nested
+	@DisplayName("강의 목록 조회")
+	class FindCourses {
+		@DisplayName("상태값이 없으면 OPEN 상태의 강의 목록이 반환된다.")
 		@Test
-		void 상태_필터가_주어지면_해당_상태의_강의_목록이_반환된다() {
+		void 상태값이_없으면_OPEN_상태의_강의_목록이_반환된다() {
 			//given
+			CourseCommand.Search command = new CourseCommand.Search("OPEN", 0, 10);
 			CourseEntity openCourse = CourseEntity.from(createCommand(1L, "자바 기초"));
 			openCourse.open();
-			given(courseRepository.findAllByStatus(CourseStatus.OPEN)).willReturn(List.of(openCourse));
+			given(courseRepository.findAllByStatus(CourseStatus.OPEN, command.page(), command.size()))
+					.willReturn(List.of(openCourse));
 
 			//when
-			List<CourseInfo> courses = courseService.findCourses(new CourseCommand.Search("OPEN"));
+			List<CourseInfo> courses = courseService.findCourses(command);
 
 			//then
 			assertThat(courses).hasSize(1);
 			assertThat(courses.getFirst().status()).isEqualTo(CourseStatus.OPEN.name());
 		}
 
-		@DisplayName("상태 필터가 없으면 전체 강의 목록이 반환된다.")
+		@DisplayName("상태값이 주어지면 해당 상태의 강의 목록이 반환된다.")
 		@Test
-		void 상태_필터가_없으면_전체_강의_목록이_반환된다() {
+		void 상태값이_주어지면_해당_상태의_강의_목록이_반환된다() {
 			//given
+			CourseCommand.Search command = new CourseCommand.Search("DRAFT", 0, 10);
 			CourseEntity draftCourse = CourseEntity.from(createCommand(1L, "자바 기초"));
-			CourseEntity openCourse = CourseEntity.from(createCommand(1L, "스프링 기초"));
-			openCourse.open();
-			given(courseRepository.findAll()).willReturn(List.of(draftCourse, openCourse));
+			given(courseRepository.findAllByStatus(CourseStatus.DRAFT, command.page(), command.size()))
+					.willReturn(List.of(draftCourse));
 
 			//when
-			List<CourseInfo> courses = courseService.findCourses(new CourseCommand.Search(null));
+			List<CourseInfo> courses = courseService.findCourses(command);
 
 			//then
-			assertThat(courses).hasSize(2);
+			assertThat(courses).hasSize(1);
+			assertThat(courses.getFirst().status()).isEqualTo(CourseStatus.DRAFT.name());
+		}
+
+		@DisplayName("상태값이 없으면 OPEN 상태의 강의 수가 반환된다.")
+		@Test
+		void 상태값이_없으면_OPEN_상태의_강의_수가_반환된다() {
+			//given
+			CourseCommand.Search command = new CourseCommand.Search("OPEN", 0, 10);
+			given(courseRepository.countByStatus(CourseStatus.OPEN, command.page(), command.size())).willReturn(3L);
+
+			//when
+			long count = courseService.countCourses(command);
+
+			//then
+			assertThat(count).isEqualTo(3L);
+		}
+	}
+
+	/**
+	 * - 강의 생성자는 본인의 강의를 오픈할 수 있다.
+	 * - 다른 생성자의 강의를 오픈할 수 없다.
+	 */
+	@Nested
+	@DisplayName("강의 오픈")
+	class Open {
+		@DisplayName("강의 생성자는 본인의 강의를 오픈할 수 있다.")
+		@Test
+		void 강의_생성자는_본인의_강의를_오픈할_수_있다() {
+			//given
+			CourseEntity course = CourseEntity.from(createCommand(1L, "자바 기초"));
+			given(courseRepository.findById(1L)).willReturn(Optional.of(course));
+
+			//when
+			CourseInfo courseInfo = courseService.courseOpen(new CourseCommand.Open(1L, 1L));
+
+			//then
+			assertThat(courseInfo.status()).isEqualTo(CourseStatus.OPEN.name());
+		}
+
+		@DisplayName("다른 생성자의 강의를 오픈할 수 없다.")
+		@Test
+		void 다른_생성자의_강의를_오픈할_수_없다() {
+			//given
+			CourseEntity course = CourseEntity.from(createCommand(1L, "자바 기초"));
+			given(courseRepository.findById(1L)).willReturn(Optional.of(course));
+
+			//then
+			assertThatThrownBy(() -> courseService.courseOpen(new CourseCommand.Open(1L, 2L)))
+					.isInstanceOf(com.liveklass.support.error.CoreException.class)
+					.extracting("errorType")
+					.isEqualTo(com.liveklass.support.error.ErrorType.FORBIDDEN);
 		}
 	}
 

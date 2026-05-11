@@ -78,7 +78,7 @@ public class CourseServiceIT {
 			CourseCommand.Find command = new CourseCommand.Find(savedCourse.getId());
 
 			//when
-			Optional<CourseInfo> courseInfo = courseService.findCourse(command);
+			Optional<CourseInfo> courseInfo = courseService.findCourseInfo(command);
 
 			//then
 			assertAll(
@@ -96,7 +96,7 @@ public class CourseServiceIT {
 			CourseCommand.Find command = new CourseCommand.Find(-1L);
 
 			//when
-			Optional<CourseInfo> courseInfo = courseService.findCourse(command);
+			Optional<CourseInfo> courseInfo = courseService.findCourseInfo(command);
 
 			//then
 			assertThat(courseInfo).isEmpty();
@@ -104,52 +104,80 @@ public class CourseServiceIT {
 	}
 
 	/**
-	 * - 상태 필터가 주어지면 해당 상태의 강의 목록이 반환된다.
-	 * - 상태 필터가 없으면 전체 강의 목록이 반환된다.
+	 * - 상태값이 없으면 OPEN 상태의 강의 목록과 강의 수가 반환된다.
+	 * - 상태값이 주어지면 해당 상태의 강의 목록과 강의 수가 반환된다.
 	 */
 	@Nested
 	@DisplayName("강의 목록 조회 시")
 	class FindCourses {
-		@DisplayName("상태 필터가 주어지면 해당 상태의 강의 목록이 반환된다.")
+		@DisplayName("상태값이 없으면 OPEN 상태의 강의 목록과 강의 수가 반환된다.")
 		@Test
-		public void 상태_필터가_주어지면_해당_상태의_강의_목록이_반환된다() {
+		public void 상태값이_없으면_OPEN_상태의_강의_목록과_강의_수가_반환된다() {
 			//given
 			CourseEntity draftCourse = CourseEntity.from(createCommand(1L, "자바 기초"));
 			CourseEntity openCourse = CourseEntity.from(createCommand(1L, "스프링 기초"));
 			openCourse.open();
 			courseRepository.save(draftCourse);
 			courseRepository.save(openCourse);
+			CourseCommand.Search command = new CourseCommand.Search("OPEN", 0, 10);
 
 			//when
-			List<CourseInfo> courses = courseService.findCourses(new CourseCommand.Search("OPEN"));
+			List<CourseInfo> courses = courseService.findCourses(command);
+			long count = courseService.countCourses(command);
 
 			//then
 			assertAll(
 					() -> assertThat(courses).hasSize(1),
 					() -> assertThat(courses.getFirst().title()).isEqualTo(openCourse.getTitle()),
-					() -> assertThat(courses.getFirst().status()).isEqualTo(CourseStatus.OPEN.name())
+					() -> assertThat(courses.getFirst().status()).isEqualTo(CourseStatus.OPEN.name()),
+					() -> assertThat(count).isEqualTo(1L)
 			);
 		}
 
-		@DisplayName("상태 필터가 없으면 전체 강의 목록이 반환된다.")
+		@DisplayName("상태값이 주어지면 해당 상태의 강의 목록과 강의 수가 반환된다.")
 		@Test
-		public void 상태_필터가_없으면_전체_강의_목록이_반환된다() {
+		public void 상태값이_주어지면_해당_상태의_강의_목록과_강의_수가_반환된다() {
 			//given
 			CourseEntity draftCourse = CourseEntity.from(createCommand(1L, "자바 기초"));
 			CourseEntity openCourse = CourseEntity.from(createCommand(1L, "스프링 기초"));
 			openCourse.open();
 			courseRepository.save(draftCourse);
 			courseRepository.save(openCourse);
+			CourseCommand.Search command = new CourseCommand.Search("DRAFT", 0, 10);
 
 			//when
-			List<CourseInfo> courses = courseService.findCourses(new CourseCommand.Search(null));
+			List<CourseInfo> courses = courseService.findCourses(command);
+			long count = courseService.countCourses(command);
 
 			//then
 			assertAll(
-					() -> assertThat(courses).hasSize(2),
-					() -> assertThat(courses)
-							.extracting(CourseInfo::title)
-							.containsExactlyInAnyOrder("자바 기초", "스프링 기초")
+					() -> assertThat(courses).hasSize(1),
+					() -> assertThat(courses.getFirst().title()).isEqualTo(draftCourse.getTitle()),
+					() -> assertThat(courses.getFirst().status()).isEqualTo(CourseStatus.DRAFT.name()),
+					() -> assertThat(count).isEqualTo(1L)
+			);
+		}
+	}
+
+	/**
+	 * - 강의 생성자는 본인의 강의를 오픈할 수 있다.
+	 */
+	@Nested
+	@DisplayName("강의 오픈 시")
+	class Open {
+		@DisplayName("강의 생성자는 본인의 강의를 오픈할 수 있다.")
+		@Test
+		public void 강의_생성자는_본인의_강의를_오픈할_수_있다() {
+			//given
+			CourseEntity course = courseRepository.save(CourseEntity.from(createCommand(1L, "자바 기초")));
+
+			//when
+			CourseInfo courseInfo = courseService.courseOpen(new CourseCommand.Open(course.getId(), course.getCreatorId()));
+
+			//then
+			assertAll(
+					() -> assertThat(courseInfo.id()).isEqualTo(course.getId()),
+					() -> assertThat(courseInfo.status()).isEqualTo(CourseStatus.OPEN.name())
 			);
 		}
 	}
