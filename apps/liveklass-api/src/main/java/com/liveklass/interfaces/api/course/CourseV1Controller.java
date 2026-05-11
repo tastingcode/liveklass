@@ -61,4 +61,15 @@ public class CourseV1Controller implements CourseV1ApiSpec {
 		return ApiResponse.success(response);
 	}
 
+	@PatchMapping("/{courseId}/close")
+	@Override
+	public ApiResponse<CourseV1Dto.CourseResponse> closeCourse(
+			@RequestHeader("X-USER-ID") Long userId,
+			@PathVariable Long courseId
+	) {
+		CourseResult courseResult = courseFacade.close(new CourseCriteria.Close(courseId, userId));
+		CourseV1Dto.CourseResponse response = CourseV1Dto.CourseResponse.from(courseResult);
+		return ApiResponse.success(response);
+	}
+
 }

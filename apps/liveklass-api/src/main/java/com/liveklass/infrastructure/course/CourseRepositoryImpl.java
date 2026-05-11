@@ -27,6 +27,11 @@ public class CourseRepositoryImpl implements CourseRepository {
 	}
 
 	@Override
+	public Optional<CourseEntity> findByIdForUpdate(Long courseId) {
+		return courseJpaRepository.findByIdForUpdate(courseId);
+	}
+
+	@Override
 	public List<CourseEntity> findAllByStatus(CourseStatus status, int page, int size) {
 		return courseJpaRepository.findAllByStatus(status, PageRequest.of(page, size));
 	}

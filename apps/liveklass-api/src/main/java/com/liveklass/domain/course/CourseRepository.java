@@ -8,6 +8,8 @@ public interface CourseRepository {
 
 	Optional<CourseEntity> findById(Long courseId);
 
+	Optional<CourseEntity> findByIdForUpdate(Long courseId);
+
 	List<CourseEntity> findAllByStatus(CourseStatus status, int page, int size);
 
 	long countByStatus(CourseStatus status, int page, int size);

@@ -46,4 +46,11 @@ public class CourseCriteria {
 		}
 
 	}
+
+	public record Close(Long courseId, Long creatorId){
+		public CourseCommand.Close toClose(){
+			return new CourseCommand.Close(courseId, creatorId);
+		}
+
+	}
 }

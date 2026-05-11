@@ -31,6 +31,11 @@ public class CourseService {
 		return courseRepository.findById(command.courseId()).map(CourseInfo::from);
 	}
 
+	@Transactional
+	public Optional<CourseInfo> findCourseInfoForUpdate(CourseCommand.Find command) {
+		return courseRepository.findByIdForUpdate(command.courseId()).map(CourseInfo::from);
+	}
+
 	@Transactional(readOnly = true)
 	public List<CourseInfo> findCourses(CourseCommand.Search command) {
 		CourseStatus status = CourseStatus.from(command.status());
@@ -58,6 +63,20 @@ public class CourseService {
 		}
 
 		course.open();
+		return CourseInfo.from(course);
+	}
+
+	@Transactional
+	public CourseInfo courseClose(CourseCommand.Close command) {
+		CourseEntity course = courseRepository.findById(command.courseId()).orElseThrow(
+				() -> new CoreException(ErrorType.NOT_FOUND, "강의를 찾을 수 없습니다.")
+		);
+
+		if (!course.getCreatorId().equals(command.creatorId())) {
+			throw new CoreException(ErrorType.FORBIDDEN, "강사는 본인의 강의만 마감할 수 있습니다.");
+		}
+
+		course.close();
 		return CourseInfo.from(course);
 	}
 

@@ -70,7 +70,7 @@ public class CourseFacade {
 				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "강의를 찾을 수 없습니다: " + criteria.courseId()));
 
 		// 2. 해당 신청 인원 조회
-		int enrollmentCount = enrollmentService.getEnrollmentCount(criteria.courseId());
+		int enrollmentCount = enrollmentService.getApplicantsCount(criteria.courseId());
 
 		return CourseResult.Detail.of(courseInfo, enrollmentCount);
 	}
@@ -79,6 +79,14 @@ public class CourseFacade {
 	public CourseResult open(CourseCriteria.Open criteria) {
 		// 강의 오픈
 		CourseInfo courseInfo = courseService.courseOpen(criteria.toOpen());
+
+		return CourseResult.of(courseInfo);
+	}
+
+	@Transactional
+	public CourseResult close(CourseCriteria.Close criteria) {
+		// 강의 모집 마감
+		CourseInfo courseInfo = courseService.courseClose(criteria.toClose());
 
 		return CourseResult.of(courseInfo);
 	}

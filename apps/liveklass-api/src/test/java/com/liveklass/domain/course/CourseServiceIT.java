@@ -1,5 +1,7 @@
 package com.liveklass.domain.course;
 
+import com.liveklass.support.error.CoreException;
+import com.liveklass.support.error.ErrorType;
 import com.liveklass.utils.DatabaseCleanUp;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -13,6 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 @SpringBootTest
@@ -179,6 +182,49 @@ public class CourseServiceIT {
 					() -> assertThat(courseInfo.id()).isEqualTo(course.getId()),
 					() -> assertThat(courseInfo.status()).isEqualTo(CourseStatus.OPEN.name())
 			);
+		}
+	}
+
+	/**
+	 * - 강의 생성자는 본인의 강의를 마감할 수 있다.
+	 * - 다른 생성자의 강의를 마감할 수 없다.
+	 */
+	@Nested
+	@DisplayName("강의 마감 시")
+	class Close {
+		@DisplayName("강의 생성자는 본인의 강의를 마감할 수 있다.")
+		@Test
+		public void 강의_생성자는_본인의_강의를_마감할_수_있다() {
+			//given
+			CourseEntity course = CourseEntity.from(createCommand(1L, "자바 기초"));
+			course.open();
+			CourseEntity savedCourse = courseRepository.save(course);
+
+			//when
+			CourseInfo courseInfo = courseService.courseClose(new CourseCommand.Close(savedCourse.getId(), savedCourse.getCreatorId()));
+
+			//then
+			assertAll(
+					() -> assertThat(courseInfo.id()).isEqualTo(savedCourse.getId()),
+					() -> assertThat(courseInfo.status()).isEqualTo(CourseStatus.CLOSED.name()),
+					() -> assertThat(courseRepository.findById(savedCourse.getId()).orElseThrow().getStatus())
+							.isEqualTo(CourseStatus.CLOSED)
+			);
+		}
+
+		@DisplayName("다른 생성자의 강의를 마감할 수 없다.")
+		@Test
+		public void 다른_생성자의_강의를_마감할_수_없다() {
+			//given
+			CourseEntity course = CourseEntity.from(createCommand(1L, "자바 기초"));
+			course.open();
+			CourseEntity savedCourse = courseRepository.save(course);
+
+			//then
+			assertThatThrownBy(() -> courseService.courseClose(new CourseCommand.Close(savedCourse.getId(), 2L)))
+					.isInstanceOf(CoreException.class)
+					.extracting("errorType")
+					.isEqualTo(ErrorType.FORBIDDEN);
 		}
 	}
 

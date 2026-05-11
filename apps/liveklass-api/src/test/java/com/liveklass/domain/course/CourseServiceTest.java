@@ -159,6 +159,43 @@ class CourseServiceTest {
 		}
 	}
 
+	/**
+	 * - 강의 생성자는 본인의 강의를 마감할 수 있다.
+	 * - 다른 생성자의 강의를 마감할 수 없다.
+	 */
+	@Nested
+	@DisplayName("강의 마감")
+	class Close {
+		@DisplayName("강의 생성자는 본인의 강의를 마감할 수 있다.")
+		@Test
+		void 강의_생성자는_본인의_강의를_마감할_수_있다() {
+			//given
+			CourseEntity course = CourseEntity.from(createCommand(1L, "자바 기초"));
+			course.open();
+			given(courseRepository.findById(1L)).willReturn(Optional.of(course));
+
+			//when
+			CourseInfo courseInfo = courseService.courseClose(new CourseCommand.Close(1L, 1L));
+
+			//then
+			assertThat(courseInfo.status()).isEqualTo(CourseStatus.CLOSED.name());
+		}
+
+		@DisplayName("다른 생성자의 강의를 마감할 수 없다.")
+		@Test
+		void 다른_생성자의_강의를_마감할_수_없다() {
+			//given
+			CourseEntity course = CourseEntity.from(createCommand(1L, "자바 기초"));
+			given(courseRepository.findById(1L)).willReturn(Optional.of(course));
+
+			//then
+			assertThatThrownBy(() -> courseService.courseClose(new CourseCommand.Close(1L, 2L)))
+					.isInstanceOf(com.liveklass.support.error.CoreException.class)
+					.extracting("errorType")
+					.isEqualTo(com.liveklass.support.error.ErrorType.FORBIDDEN);
+		}
+	}
+
 	private CourseCommand.Create createCommand(Long creatorId, String title) {
 		return new CourseCommand.Create(
 				creatorId,

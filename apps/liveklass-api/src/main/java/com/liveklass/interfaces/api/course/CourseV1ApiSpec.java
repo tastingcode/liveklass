@@ -61,4 +61,15 @@ public interface CourseV1ApiSpec {
 			@Schema(name = "강의 ID", description = "오픈할 강의 ID")
 			Long courseId
 	);
+
+	@Operation(
+			summary = "강의 모집 마감",
+			description = "강사가 본인의 강의를 모집 마감 상태로 변경합니다."
+	)
+	ApiResponse<CourseV1Dto.CourseResponse> closeCourse(
+			@Schema(name = "사용자 ID", description = "강의를 마감하는 사용자 ID")
+			Long userId,
+			@Schema(name = "강의 ID", description = "마감할 강의 ID")
+			Long courseId
+	);
 }

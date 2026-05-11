@@ -306,6 +306,70 @@ public class CourseV1ApiE2ETest {
 		}
 	}
 
+	/**
+	 * - 강의 마감이 성공할 경우, CLOSED 상태의 강의 정보를 응답으로 반환한다.
+	 * - 다른 사용자의 강의를 마감할 경우, `403 Forbidden` 응답을 반환한다.
+	 */
+	@DisplayName("PATCH /api/v1/courses/{courseId}/close")
+	@Nested
+	class PatchClose {
+		@DisplayName("강의 마감이 성공할 경우, CLOSED 상태의 강의 정보를 응답으로 반환한다.")
+		@Test
+		public void 강의_마감이_성공할_경우_CLOSED_상태의_강의_정보를_응답으로_반환한다() {
+			//given
+			UserEntity creator = saveUser("creator1", "CREATOR");
+			CourseEntity course = CourseEntity.from(createCommand(creator.getId(), "자바 기초"));
+			course.open();
+			CourseEntity savedCourse = courseRepository.save(course);
+
+			ParameterizedTypeReference<ApiResponse<CourseV1Dto.CourseResponse>> responseType = new ParameterizedTypeReference<>() {};
+			HttpHeaders headers = headersWithUserId(creator.getId());
+
+			//when
+			ResponseEntity<ApiResponse<CourseV1Dto.CourseResponse>> response = testRestTemplate.exchange(
+					ENDPOINT + "/" + savedCourse.getId() + "/close",
+					HttpMethod.PATCH,
+					new HttpEntity<>(headers),
+					responseType
+			);
+
+			//then
+			Assertions.assertAll(
+					() -> assertTrue(response.getStatusCode().is2xxSuccessful()),
+					() -> assertThat(response.getBody().data().id()).isEqualTo(savedCourse.getId()),
+					() -> assertThat(response.getBody().data().status()).isEqualTo(CourseStatus.CLOSED.name())
+			);
+		}
+
+		@DisplayName("다른 사용자의 강의를 마감할 경우, `403 Forbidden` 응답을 반환한다.")
+		@Test
+		public void 다른_사용자의_강의를_마감할_경우_403_Forbidden_응답을_반환한다() {
+			//given
+			UserEntity creator = saveUser("creator1", "CREATOR");
+			UserEntity otherCreator = saveUser("creator2", "CREATOR");
+			CourseEntity course = CourseEntity.from(createCommand(creator.getId(), "자바 기초"));
+			course.open();
+			CourseEntity savedCourse = courseRepository.save(course);
+
+			ParameterizedTypeReference<ApiResponse<CourseV1Dto.CourseResponse>> responseType = new ParameterizedTypeReference<>() {};
+			HttpHeaders headers = headersWithUserId(otherCreator.getId());
+
+			//when
+			ResponseEntity<ApiResponse<CourseV1Dto.CourseResponse>> response = testRestTemplate.exchange(
+					ENDPOINT + "/" + savedCourse.getId() + "/close",
+					HttpMethod.PATCH,
+					new HttpEntity<>(headers),
+					responseType
+			);
+
+			//then
+			Assertions.assertAll(
+					() -> assertTrue(response.getStatusCode().is4xxClientError()),
+					() -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN)
+			);
+		}
+	}
+
 	private UserEntity saveUser(String loginId, String userRole) {
 		UserCommand.Create command = new UserCommand.Create(loginId, userRole);
 		return userRepository.save(UserEntity.from(command));

@@ -20,6 +20,9 @@ public class CourseCommand {
 	public record Open(Long courseId, Long creatorId) {
 	}
 
+	public record Close(Long courseId, Long creatorId) {
+	}
+
 	public record Search(String status, int page, int size) {
 	}
 
