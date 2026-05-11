@@ -10,4 +10,6 @@ public interface EnrollmentJpaRepository extends JpaRepository<EnrollmentEntity,
 	long countByCourseIdAndStatusNot(Long courseId, EnrollmentStatus status);
 
 	List<EnrollmentEntity> findAllByUserId(Long userId);
+
+	int countByCourseId(Long courseId);
 }

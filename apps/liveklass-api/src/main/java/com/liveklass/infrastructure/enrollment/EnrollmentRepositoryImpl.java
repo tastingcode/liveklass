@@ -27,4 +27,9 @@ public class EnrollmentRepositoryImpl implements EnrollmentRepository {
 	public List<EnrollmentEntity> findAllByUserId(Long userId) {
 		return enrollmentJpaRepository.findAllByUserId(userId);
 	}
+
+	@Override
+	public int countByCourseId(Long courseId) {
+		return enrollmentJpaRepository.countByCourseId(courseId);
+	}
 }

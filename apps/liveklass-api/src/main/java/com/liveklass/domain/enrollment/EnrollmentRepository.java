@@ -8,4 +8,6 @@ public interface EnrollmentRepository {
 	long countByCourseIdAndStatusNot(Long courseId, EnrollmentStatus status);
 
 	List<EnrollmentEntity> findAllByUserId(Long userId);
+
+	int countByCourseId(Long courseId);
 }

@@ -32,4 +32,9 @@ public class EnrollmentService {
 				.map(EnrollmentInfo::from)
 				.toList();
 	}
+
+	@Transactional(readOnly = true)
+	public int getEnrollmentCount(Long courseId){
+		return enrollmentRepository.countByCourseId(courseId);
+	}
 }
