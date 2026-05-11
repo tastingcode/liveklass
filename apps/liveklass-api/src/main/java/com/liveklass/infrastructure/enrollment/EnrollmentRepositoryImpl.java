@@ -4,9 +4,11 @@ import com.liveklass.domain.enrollment.EnrollmentEntity;
 import com.liveklass.domain.enrollment.EnrollmentRepository;
 import com.liveklass.domain.enrollment.EnrollmentStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -19,8 +21,13 @@ public class EnrollmentRepositoryImpl implements EnrollmentRepository {
 	}
 
 	@Override
-	public long countByCourseIdAndStatusNot(Long courseId, EnrollmentStatus status) {
-		return enrollmentJpaRepository.countByCourseIdAndStatusNot(courseId, status);
+	public int countByCourseIdAndStatusIn(Long courseId, List<EnrollmentStatus> statuses) {
+		return enrollmentJpaRepository.countByCourseIdAndStatusIn(courseId, statuses);
+	}
+
+	@Override
+	public Optional<EnrollmentEntity> findByCourseIdAndUserId(Long courseId, Long userId) {
+		return enrollmentJpaRepository.findByCourseIdAndUserId(courseId, userId);
 	}
 
 	@Override
@@ -29,7 +36,12 @@ public class EnrollmentRepositoryImpl implements EnrollmentRepository {
 	}
 
 	@Override
-	public int countByCourseId(Long courseId) {
-		return enrollmentJpaRepository.countByCourseId(courseId);
+	public List<EnrollmentEntity> findAllByCourseIdAndStatusIn(Long courseId, List<EnrollmentStatus> statuses, int page, int size) {
+		return enrollmentJpaRepository.findAllByCourseIdAndStatusIn(courseId, statuses, PageRequest.of(page, size));
+	}
+
+	@Override
+	public long countByCourseIdAndStatusIn(Long courseId, List<EnrollmentStatus> statuses, int page, int size) {
+		return enrollmentJpaRepository.findByCourseIdAndStatusIn(courseId, statuses, PageRequest.of(page, size)).getTotalElements();
 	}
 }

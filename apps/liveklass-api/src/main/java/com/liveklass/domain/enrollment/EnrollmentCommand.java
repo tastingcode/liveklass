@@ -10,4 +10,13 @@ public class EnrollmentCommand {
 
 	public record FindMy(Long userId) {
 	}
+
+	public record FindCourseStudents(Long courseId, int page, int size) {
+	}
+
+	public record Confirm(Long courseId, Long userId) {
+	}
+
+	public record Cancel(Long courseId, Long userId) {
+	}
 }

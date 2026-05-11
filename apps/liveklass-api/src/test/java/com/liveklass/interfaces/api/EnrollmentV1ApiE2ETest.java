@@ -1,5 +1,6 @@
 package com.liveklass.interfaces.api;
 
+import com.liveklass.domain.common.PageResponse;
 import com.liveklass.domain.course.CourseCommand;
 import com.liveklass.domain.course.CourseEntity;
 import com.liveklass.domain.course.CourseRepository;
@@ -119,6 +120,127 @@ public class EnrollmentV1ApiE2ETest {
 	}
 
 	/**
+	 * - 결제 확정에 성공할 경우, 확정된 수강 신청 정보를 응답으로 반환한다.
+	 * - 수강 신청이 없을 경우, `404 Not Found` 응답을 반환한다.
+	 */
+	@DisplayName("PATCH /api/v1/enrollments/{courseId}/payment")
+	@Nested
+	class PatchPayment {
+		@DisplayName("결제 확정에 성공할 경우, 확정된 수강 신청 정보를 응답으로 반환한다.")
+		@Test
+		public void 결제_확정에_성공할_경우_확정된_수강_신청_정보를_응답으로_반환한다() {
+			//given
+			UserEntity student = saveUser("student1", "STUDENT");
+			CourseEntity course = courseRepository.save(openCourse(30, "자바 기초"));
+			enrollmentRepository.save(EnrollmentEntity.from(new EnrollmentCommand.Create(course.getId(), student.getId(), course.getCapacity())));
+
+			ParameterizedTypeReference<ApiResponse<EnrollmentV1Dto.EnrollmentResponse>> responseType = new ParameterizedTypeReference<>() {};
+			HttpHeaders headers = headersWithUserId(student.getId());
+
+			//when
+			ResponseEntity<ApiResponse<EnrollmentV1Dto.EnrollmentResponse>> response = testRestTemplate.exchange(
+					ENDPOINT + "/" + course.getId() + "/payment",
+					HttpMethod.PATCH,
+					new HttpEntity<>(headers),
+					responseType
+			);
+
+			//then
+			Assertions.assertAll(
+					() -> assertTrue(response.getStatusCode().is2xxSuccessful()),
+					() -> assertThat(response.getBody().data().courseId()).isEqualTo(course.getId()),
+					() -> assertThat(response.getBody().data().userId()).isEqualTo(student.getId()),
+					() -> assertThat(response.getBody().data().status()).isEqualTo(EnrollmentStatus.CONFIRMED.name()),
+					() -> assertThat(response.getBody().data().confirmedDate()).isNotNull()
+			);
+		}
+
+		@DisplayName("수강 신청이 없을 경우, `404 Not Found` 응답을 반환한다.")
+		@Test
+		public void 수강_신청이_없을_경우_404_Not_Found_응답을_반환한다() {
+			//given
+			UserEntity student = saveUser("student1", "STUDENT");
+			CourseEntity course = courseRepository.save(openCourse(30, "자바 기초"));
+			ParameterizedTypeReference<ApiResponse<EnrollmentV1Dto.EnrollmentResponse>> responseType = new ParameterizedTypeReference<>() {};
+			HttpHeaders headers = headersWithUserId(student.getId());
+
+			//when
+			ResponseEntity<ApiResponse<EnrollmentV1Dto.EnrollmentResponse>> response = testRestTemplate.exchange(
+					ENDPOINT + "/" + course.getId() + "/payment",
+					HttpMethod.PATCH,
+					new HttpEntity<>(headers),
+					responseType
+			);
+
+			//then
+			Assertions.assertAll(
+					() -> assertTrue(response.getStatusCode().is4xxClientError()),
+					() -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND)
+			);
+		}
+	}
+
+	/**
+	 * - 수강 취소에 성공할 경우, 취소된 수강 신청 정보를 응답으로 반환한다.
+	 * - 수강 신청이 없을 경우, `404 Not Found` 응답을 반환한다.
+	 */
+	@DisplayName("PATCH /api/v1/enrollments/{courseId}/cancel")
+	@Nested
+	class PatchCancel {
+		@DisplayName("수강 취소에 성공할 경우, 취소된 수강 신청 정보를 응답으로 반환한다.")
+		@Test
+		public void 수강_취소에_성공할_경우_취소된_수강_신청_정보를_응답으로_반환한다() {
+			//given
+			UserEntity student = saveUser("student1", "STUDENT");
+			CourseEntity course = courseRepository.save(openCourse(30, "자바 기초"));
+			enrollmentRepository.save(EnrollmentEntity.from(new EnrollmentCommand.Create(course.getId(), student.getId(), course.getCapacity())));
+
+			ParameterizedTypeReference<ApiResponse<EnrollmentV1Dto.EnrollmentResponse>> responseType = new ParameterizedTypeReference<>() {};
+			HttpHeaders headers = headersWithUserId(student.getId());
+
+			//when
+			ResponseEntity<ApiResponse<EnrollmentV1Dto.EnrollmentResponse>> response = testRestTemplate.exchange(
+					ENDPOINT + "/" + course.getId() + "/cancel",
+					HttpMethod.PATCH,
+					new HttpEntity<>(headers),
+					responseType
+			);
+
+			//then
+			Assertions.assertAll(
+					() -> assertTrue(response.getStatusCode().is2xxSuccessful()),
+					() -> assertThat(response.getBody().data().courseId()).isEqualTo(course.getId()),
+					() -> assertThat(response.getBody().data().userId()).isEqualTo(student.getId()),
+					() -> assertThat(response.getBody().data().status()).isEqualTo(EnrollmentStatus.CANCELLED.name())
+			);
+		}
+
+		@DisplayName("수강 신청이 없을 경우, `404 Not Found` 응답을 반환한다.")
+		@Test
+		public void 수강_신청이_없을_경우_404_Not_Found_응답을_반환한다() {
+			//given
+			UserEntity student = saveUser("student1", "STUDENT");
+			CourseEntity course = courseRepository.save(openCourse(30, "자바 기초"));
+			ParameterizedTypeReference<ApiResponse<EnrollmentV1Dto.EnrollmentResponse>> responseType = new ParameterizedTypeReference<>() {};
+			HttpHeaders headers = headersWithUserId(student.getId());
+
+			//when
+			ResponseEntity<ApiResponse<EnrollmentV1Dto.EnrollmentResponse>> response = testRestTemplate.exchange(
+					ENDPOINT + "/" + course.getId() + "/cancel",
+					HttpMethod.PATCH,
+					new HttpEntity<>(headers),
+					responseType
+			);
+
+			//then
+			Assertions.assertAll(
+					() -> assertTrue(response.getStatusCode().is4xxClientError()),
+					() -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND)
+			);
+		}
+	}
+
+	/**
 	 * - 내 수강 신청 목록 조회에 성공할 경우, 내 수강 신청 목록을 응답으로 반환한다.
 	 */
 	@DisplayName("GET /api/v1/enrollments/me")
@@ -158,14 +280,87 @@ public class EnrollmentV1ApiE2ETest {
 		}
 	}
 
+	/**
+	 * - 강사가 본인의 특정 강의 수강생 목록 조회에 성공할 경우, 수강 확정된 학생 목록을 응답으로 반환한다.
+	 * - 다른 강사의 강의 수강생 목록 조회 시, `403 Forbidden` 응답을 반환한다.
+	 */
+	@DisplayName("GET /api/v1/enrollments/courses/{courseId}/students")
+	@Nested
+	class GetCourseStudents {
+		@DisplayName("강사가 본인의 특정 강의 수강생 목록 조회에 성공할 경우, 수강 확정된 학생 목록을 응답으로 반환한다.")
+		@Test
+		public void 강사가_본인의_특정_강의_수강생_목록_조회에_성공할_경우_수강_확정된_학생_목록을_응답으로_반환한다() {
+			//given
+			UserEntity creator = saveUser("creator1", "CREATOR");
+			UserEntity confirmedStudent = saveUser("student1", "STUDENT");
+			UserEntity pendingStudent = saveUser("student2", "STUDENT");
+			CourseEntity course = courseRepository.save(openCourse(creator.getId(), 30, "자바 기초"));
+
+			EnrollmentEntity confirmedEnrollment = EnrollmentEntity.from(new EnrollmentCommand.Create(course.getId(), confirmedStudent.getId(), course.getCapacity()));
+			confirmedEnrollment.confirm();
+			enrollmentRepository.save(confirmedEnrollment);
+			enrollmentRepository.save(EnrollmentEntity.from(new EnrollmentCommand.Create(course.getId(), pendingStudent.getId(), course.getCapacity())));
+
+			ParameterizedTypeReference<ApiResponse<PageResponse<EnrollmentV1Dto.EnrollmentResponse>>> responseType = new ParameterizedTypeReference<>() {};
+			HttpHeaders headers = headersWithUserId(creator.getId());
+
+			//when
+			ResponseEntity<ApiResponse<PageResponse<EnrollmentV1Dto.EnrollmentResponse>>> response = testRestTemplate.exchange(
+					ENDPOINT + "/courses/" + course.getId() + "/students",
+					HttpMethod.GET,
+					new HttpEntity<>(headers),
+					responseType
+			);
+
+			//then
+			Assertions.assertAll(
+					() -> assertTrue(response.getStatusCode().is2xxSuccessful()),
+					() -> assertThat(response.getBody().data().content()).hasSize(1),
+					() -> assertThat(response.getBody().data().content().getFirst().userId()).isEqualTo(confirmedStudent.getId()),
+					() -> assertThat(response.getBody().data().content().getFirst().status()).isEqualTo(EnrollmentStatus.CONFIRMED.name()),
+					() -> assertThat(response.getBody().data().totalElements()).isEqualTo(1L)
+			);
+		}
+
+		@DisplayName("다른 강사의 강의 수강생 목록 조회 시, `403 Forbidden` 응답을 반환한다.")
+		@Test
+		public void 다른_강사의_강의_수강생_목록_조회_시_403_Forbidden_응답을_반환한다() {
+			//given
+			UserEntity creator = saveUser("creator1", "CREATOR");
+			UserEntity otherCreator = saveUser("creator2", "CREATOR");
+			CourseEntity course = courseRepository.save(openCourse(creator.getId(), 30, "자바 기초"));
+
+			ParameterizedTypeReference<ApiResponse<PageResponse<EnrollmentV1Dto.EnrollmentResponse>>> responseType = new ParameterizedTypeReference<>() {};
+			HttpHeaders headers = headersWithUserId(otherCreator.getId());
+
+			//when
+			ResponseEntity<ApiResponse<PageResponse<EnrollmentV1Dto.EnrollmentResponse>>> response = testRestTemplate.exchange(
+					ENDPOINT + "/courses/" + course.getId() + "/students",
+					HttpMethod.GET,
+					new HttpEntity<>(headers),
+					responseType
+			);
+
+			//then
+			Assertions.assertAll(
+					() -> assertTrue(response.getStatusCode().is4xxClientError()),
+					() -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN)
+			);
+		}
+	}
+
 	private UserEntity saveUser(String loginId, String userRole) {
 		UserCommand.Create command = new UserCommand.Create(loginId, userRole);
 		return userRepository.save(UserEntity.from(command));
 	}
 
 	private CourseEntity openCourse(int capacity, String title) {
+		return openCourse(1L, capacity, title);
+	}
+
+	private CourseEntity openCourse(Long creatorId, int capacity, String title) {
 		CourseEntity course = CourseEntity.from(new CourseCommand.Create(
-				1L,
+				creatorId,
 				title,
 				"강의 설명",
 				1000,

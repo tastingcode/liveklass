@@ -22,4 +22,13 @@ public class UserValidator {
 			throw new CoreException(ErrorType.BAD_REQUEST, "현재 사용자는 수강생이 아닙니다.");
 		}
 	}
+
+	public void validateCreator(UserCommand.Find command) {
+		UserInfo userInfo = userService.findUser(command)
+				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "사용자를 찾을 수 없습니다: " + command.userId()));
+
+		if (!UserRole.CREATOR.name().equals(userInfo.userRole())) {
+			throw new CoreException(ErrorType.BAD_REQUEST, "현재 사용자는 강사가 아닙니다.");
+		}
+	}
 }
