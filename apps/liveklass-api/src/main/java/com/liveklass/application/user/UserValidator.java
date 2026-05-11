@@ -14,12 +14,12 @@ import org.springframework.stereotype.Component;
 public class UserValidator {
 	private final UserService userService;
 
-	public void validateStudent(Long userId) {
-		UserInfo userInfo = userService.findUser(new UserCommand.Find(userId))
-				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "사용자를 찾을 수 없습니다: " + userId));
+	public void validateStudent(UserCommand.Find command) {
+		UserInfo userInfo = userService.findUser(command)
+				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "사용자를 찾을 수 없습니다: " + command.userId()));
 
 		if (!UserRole.STUDENT.name().equals(userInfo.userRole())) {
-			throw new CoreException(ErrorType.FORBIDDEN, "수강생만 수강 신청 기능을 사용할 수 있습니다.");
+			throw new CoreException(ErrorType.BAD_REQUEST, "현재 사용자는 수강생이 아닙니다.");
 		}
 	}
 }

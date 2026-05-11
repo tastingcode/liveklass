@@ -5,7 +5,6 @@ import com.liveklass.domain.course.CourseRepository;
 import com.liveklass.domain.course.CourseStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
