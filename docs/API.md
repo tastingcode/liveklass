@@ -52,6 +52,7 @@
 | Method | Endpoint | 설명 | 인증 |
 | --- | --- | --- | --- |
 | `POST` | `/api/v1/users` | 회원 가입 | 불필요 |
+| `POST` | `/api/v1/users/login` | 로그인 | 불필요 |
 | `GET` | `/api/v1/users/me` | 내 정보 조회 | `X-USER-ID` |
 
 ### 강의(Course)
@@ -88,6 +89,35 @@ Content-Type: application/json
 {
   "loginId": "creator1",
   "userRole": "CREATOR"
+}
+```
+
+```json
+{
+  "meta": {
+    "result": "SUCCESS",
+    "errorCode": null,
+    "message": null
+  },
+  "data": {
+    "id": 1,
+    "loginId": "creator1",
+    "userRole": "CREATOR"
+  }
+}
+```
+
+### 로그인
+
+`loginId`로 가입된 사용자 정보를 조회합니다. 현재 프로젝트에는 비밀번호와 토큰 인증이 없으므로 화면 테스트용으로 사용자 정보를 반환합니다.
+
+```http
+POST /api/v1/users/login HTTP/1.1
+Host: localhost:8080
+Content-Type: application/json
+
+{
+  "loginId": "creator1"
 }
 ```
 

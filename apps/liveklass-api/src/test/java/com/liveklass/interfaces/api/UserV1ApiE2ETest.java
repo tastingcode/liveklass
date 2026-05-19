@@ -106,6 +106,65 @@ public class UserV1ApiE2ETest {
 	}
 
 	/**
+	 * - [x]  로그인에 성공할 경우, 해당하는 유저 정보를 응답으로 반환한다.
+	 * - [x]  존재하지 않는 로그인 ID 로 로그인할 경우, `404 Not Found` 응답을 반환한다.
+	 */
+	@DisplayName("POST /api/v1/users/login")
+	@Nested
+	class Login {
+		@DisplayName("로그인에 성공할 경우, 해당하는 유저 정보를 응답으로 반환한다.")
+		@Test
+		public void 로그인에_성공할_경우_해당하는_유저_정보를_응답으로_반환한다() {
+			//given
+			String loginId = "asd123";
+			String userRole = "STUDENT";
+			UserCommand.Create command = new UserCommand.Create(loginId, userRole);
+			UserEntity savedUser = userRepository.save(UserEntity.from(command));
+
+			UserV1Dto.LoginRequest request = new UserV1Dto.LoginRequest(loginId);
+			ParameterizedTypeReference<ApiResponse<UserV1Dto.UserResponse>> responseType = new ParameterizedTypeReference<>() {};
+
+			//when
+			ResponseEntity<ApiResponse<UserV1Dto.UserResponse>> response = testRestTemplate.exchange(
+					ENDPOINT + "/login",
+					HttpMethod.POST,
+					new HttpEntity<>(request),
+					responseType
+			);
+
+			//then
+			Assertions.assertAll(
+					() -> assertTrue(response.getStatusCode().is2xxSuccessful()),
+					() -> assertThat(response.getBody().data().id()).isEqualTo(savedUser.getId()),
+					() -> assertThat(response.getBody().data().loginId()).isEqualTo(savedUser.getLoginId()),
+					() -> assertThat(response.getBody().data().userRole()).isEqualTo(savedUser.getUserRole().name())
+			);
+		}
+
+		@DisplayName("존재하지 않는 로그인 ID 로 로그인할 경우, `404 Not Found` 응답을 반환한다.")
+		@Test
+		public void 존재하지_않는_로그인_ID_로_로그인할_경우_404_Not_Found_응답을_반환한다() {
+			//given
+			UserV1Dto.LoginRequest request = new UserV1Dto.LoginRequest("missing1");
+			ParameterizedTypeReference<ApiResponse<UserV1Dto.UserResponse>> responseType = new ParameterizedTypeReference<>() {};
+
+			//when
+			ResponseEntity<ApiResponse<UserV1Dto.UserResponse>> response = testRestTemplate.exchange(
+					ENDPOINT + "/login",
+					HttpMethod.POST,
+					new HttpEntity<>(request),
+					responseType
+			);
+
+			//then
+			Assertions.assertAll(
+					() -> assertTrue(response.getStatusCode().is4xxClientError()),
+					() -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND)
+			);
+		}
+	}
+
+	/**
 	 * - [x]  유저 정보 조회에 성공할 경우, 해당하는 유저 정보를 응답으로 반환한다.
 	 * - [x]  존재하지 않는 ID 로 조회할 경우, `404 Not Found` 응답을 반환한다.
 	 */

@@ -18,4 +18,10 @@ public class UserCriteria {
 		}
 
 	}
+
+	public record Login(String loginId) {
+		public UserCommand.Login toUserLogin() {
+			return new UserCommand.Login(loginId);
+		}
+	}
 }

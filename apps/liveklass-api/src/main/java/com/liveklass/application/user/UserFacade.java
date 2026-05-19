@@ -28,4 +28,13 @@ public class UserFacade {
 
 		return UserResult.of(userInfo);
 	}
+
+	@Transactional(readOnly = true)
+	public UserResult login(UserCriteria.Login criteria) {
+		UserInfo userInfo = userService.login(criteria.toUserLogin()).orElseThrow(() -> new CoreException(
+				ErrorType.NOT_FOUND, "사용자를 찾을 수 없습니다: " + criteria.loginId()
+		));
+
+		return UserResult.of(userInfo);
+	}
 }

@@ -29,4 +29,9 @@ public class UserService {
 		return userRepository.findById(command.userId()).map(UserInfo :: from);
 	}
 
+	@Transactional(readOnly = true)
+	public Optional<UserInfo> login(UserCommand.Login command) {
+		return userRepository.findByLoginId(command.loginId()).map(UserInfo :: from);
+	}
+
 }

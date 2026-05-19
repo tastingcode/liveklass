@@ -17,6 +17,14 @@ Content-Type: application/json
   "userRole": "STUDENT"
 }
 
+### 로그인
+POST {{liveklass-api}}/api/v1/users/login
+Content-Type: application/json
+
+{
+  "loginId": "creator1"
+}
+
 ### 내 정보 조회
 GET {{liveklass-api}}/api/v1/users/me
 X-USER-ID: 1

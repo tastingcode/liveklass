@@ -33,4 +33,15 @@ public class UserV1Dto {
 			);
 		}
 	}
+
+	public record LoginRequest(
+			@NotNull(message = "로그인 ID는 필수입니다.")
+			@Size(max = 10, message = "ID는 10자 이내이어야 합니다.")
+			@Pattern(regexp = "^[a-zA-Z0-9]+$", message = "ID는 영문 및 숫자만 포함할 수 있습니다.")
+			String loginId
+	) {
+		public UserCriteria.Login toCriteria() {
+			return new UserCriteria.Login(loginId);
+		}
+	}
 }

@@ -25,4 +25,13 @@ public interface UserV1ApiSpec {
 			@Schema(name = "사용자 ID", description = "사용자 ID")
 			Long userId
 	);
+
+	@Operation(
+			summary = "로그인",
+			description = "로그인 ID로 사용자 정보를 조회합니다."
+	)
+	ApiResponse<UserV1Dto.UserResponse> login(
+			@Schema(name = "로그인 요청", description = "로그인에 필요한 사용자 정보")
+			UserV1Dto.LoginRequest loginRequest
+	);
 }

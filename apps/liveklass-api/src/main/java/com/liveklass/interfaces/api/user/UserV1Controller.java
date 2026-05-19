@@ -31,4 +31,13 @@ public class UserV1Controller implements UserV1ApiSpec {
 		UserV1Dto.UserResponse response = UserV1Dto.UserResponse.from(userResult);
 		return ApiResponse.success(response);
 	}
+
+	@PostMapping("/login")
+	@Override
+	public ApiResponse<UserV1Dto.UserResponse> login(@Valid @RequestBody UserV1Dto.LoginRequest request) {
+		UserCriteria.Login criteria = request.toCriteria();
+		UserResult userResult = userFacade.login(criteria);
+		UserV1Dto.UserResponse response = UserV1Dto.UserResponse.from(userResult);
+		return ApiResponse.success(response);
+	}
 }

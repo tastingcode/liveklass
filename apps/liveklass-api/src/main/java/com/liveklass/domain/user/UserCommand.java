@@ -9,4 +9,7 @@ public class UserCommand {
 
 	public record Find(Long userId) {
 	}
+
+	public record Login(String loginId) {
+	}
 }
